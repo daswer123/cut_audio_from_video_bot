@@ -1,0 +1,13 @@
+.env
+telegram-data
+venv
+*.pyc
+collect_dataa.py
+/certs
+exporting
+naming
+transferring
+unpacking
+resolve
+=
+docsы.txt

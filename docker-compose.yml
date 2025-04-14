@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  api-backend:
+    image: aiogram/telegram-bot-api:latest # Образ локального API сервера
+    container_name: telegram-api-backend # Дадим имя для удобства
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+    
+  api: # Nginx
+    image: nginx:1.21-alpine
+    container_name: telegram-nginx # Дадим имя для удобства
+    restart: unless-stopped
+    volumes:
+      # Конфиг Nginx монтируем из локальной папки
+      - ./nginx:/etc/nginx/conf.d/
+      # Данные API монтируем только для чтения, Nginx их не меняет
+      - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
+    depends_on:
+      - api-backend
+    healthcheck:
+      # Проверяем, что Nginx отвечает на порту 80 внутри контейнера (wget есть в alpine)
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s # Даем Nginx время запуститься
+    # Можно открыть порт наружу для тестов, если нужно (например, 8088 хоста на 80 контейнера)
+    # ports:
+    #   - "8088:80"
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiogram-bot # Дадим имя для удобства
+    restart: unless-stopped
+    stop_signal: SIGINT
+    env_file:
+      - .env
+    depends_on:
+      [api-backend]
+volumes:
+  telegram-bot-api-data: # Volume для хранения файлов сессии и скачанных файлов API
+    driver: local

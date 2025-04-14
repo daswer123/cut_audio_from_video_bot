@@ -1,0 +1,18 @@
+# Основные зависимости
+aiogram
+
+# Конфигурация
+pydantic-settings
+python-dotenv
+
+# Опциональные зависимости для производительности (если не Windows)
+ujson; platform_system != "Windows"
+uvloop; platform_system != "Windows"
+
+# Работа с медиа
+python-ffmpeg
+aiofiles
+
+# Инструменты разработки
+black>=23.0.0
+isort>=5.10.0
