@@ -31,7 +31,6 @@ services:
     # Можно открыть порт наружу для тестов, если нужно (например, 8088 хоста на 80 контейнера)
     # ports:
     #   - "8088:80"
-
   bot:
     build:
       context: .
@@ -41,8 +40,11 @@ services:
     stop_signal: SIGINT
     env_file:
       - .env
+    volumes:
+      # Mount the telegram-bot-api-data volume to access files directly
+      - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
     depends_on:
-      [api-backend]
+      - api-backend
 volumes:
   telegram-bot-api-data: # Volume для хранения файлов сессии и скачанных файлов API
     driver: local

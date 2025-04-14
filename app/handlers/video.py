@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 from pathlib import Path
 import aiofiles
+import aiohttp
 from aiogram import Router, F
 from aiogram.types import Message, FSInputFile
 
@@ -30,10 +31,26 @@ async def handle_video(message: Message):
         video_file = await message.bot.get_file(message.video.file_id)
         video_path = TEMP_DIR / f"{message.video.file_id}.mp4"
         audio_path = TEMP_DIR / f"{message.video.file_id}.mp3"
+        # Since we now have direct access to the file system via the mounted volume,
+        # we can simply copy the file from the API server's directory
+        source_path = Path(video_file.file_path)  # This is the full path from the API
+        logger.info(f"Source file path: {source_path}")
         
-        # Download the video file
-        await message.bot.download_file(video_file.file_path, destination=video_path)
-        logger.info(f"Video downloaded to {video_path}")
+        # Check if the source file exists
+        if not os.path.exists(source_path):
+            logger.error(f"Source file does not exist: {source_path}")
+            raise FileNotFoundError(f"Source file not found: {source_path}")
+        
+        # Copy the file using aiofiles
+        async with aiofiles.open(source_path, 'rb') as src_file:
+            content = await src_file.read()
+            
+            async with aiofiles.open(video_path, 'wb') as dst_file:
+                await dst_file.write(content)
+        
+        # Log successful copy and file size
+        file_size = os.path.getsize(video_path)
+        logger.info(f"Video copied successfully to {video_path} (Size: {file_size} bytes)")
         
         # Extract audio using FFmpeg and compress to 128kbps
         ffmpeg_cmd = [
