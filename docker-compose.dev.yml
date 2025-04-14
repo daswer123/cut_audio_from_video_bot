@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  api-backend:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram-api-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+    
+  api: # Nginx
+    image: nginx:1.21-alpine
+    container_name: telegram-nginx
+    restart: unless-stopped
+    volumes:
+      # Конфиг Nginx монтируем из локальной папки
+      - ./nginx:/etc/nginx/conf.d/
+      # Данные API монтируем только для чтения, Nginx их не меняет
+      - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
+    depends_on:
+      - api-backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # Открываем порт для удобства разработки
+    ports:
+      - "8088:80"
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiogram-bot
+    restart: unless-stopped
+    stop_signal: SIGINT
+    env_file:
+      - .env
+    volumes:
+      # Монтируем локальную директорию app в контейнер
+      # Это позволяет изменять код без пересборки контейнера
+      - ./app:/app/app
+    depends_on:
+      - api-backend
+    # Для отладки можно использовать команду с автоперезагрузкой
+    command: >
+      sh -c "pip install watchdog[watchmedo] &&
+             watchmedo auto-restart --directory=/app/app --pattern=*.py --recursive -- python -m app"
+
+volumes:
+  telegram-bot-api-data:
+    driver: local
