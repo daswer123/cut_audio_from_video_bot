@@ -1,5 +1,35 @@
 # Бот для извлечения аудио из видео
 
+## Установка
+
+1. Клонируйте репозиторий:
+   ```bash
+   https://github.com/daswer123/cut_audio_from_video_bot.git
+   cd audio-extractor-bot
+   ```
+
+2. Создайте файл .env на основе примера:
+```bash
+   cp .env.example .env
+```
+
+3. Отредактируйте .env файл, заполнив необходимые данные (важны первые 4 параметра):
+   - TELEGRAM_API_ID
+   - TELEGRAM_API_HASH
+   - TELEGRAM_LOCAL
+   - TELEGRAM_TOKEN
+
+4. Запустите бота в продакшн режиме:
+   ```bash
+   docker-compose up -d
+   ```
+
+   Или в режиме разработки (без необходимости ребилда при изменениях):
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+
+
 Этот Telegram бот принимает видеофайлы от пользователей и возвращает извлеченное аудио в формате MP3, сжатое до 128kbps.
 
 ## Функциональность
