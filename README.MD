@@ -3,10 +3,10 @@
 ## Установка
 
 1. Клонируйте репозиторий:
-   ```bash
+```bash
    https://github.com/daswer123/cut_audio_from_video_bot.git
    cd audio-extractor-bot
-   ```
+```
 
 2. Создайте файл .env на основе примера:
 ```bash
